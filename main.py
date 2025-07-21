@@ -1,24 +1,24 @@
 from fastapi import FastAPI
+from fastapi.responses import JSONResponse
 from notion_client import Client
-from dotenv import load_dotenv
 import os
+from dotenv import load_dotenv
 
 load_dotenv()
 
-app = FastAPI()
+NOTION_TOKEN = os.getenv("NOTION_TOKEN")
+notion = Client(auth=NOTION_TOKEN)
 
-# Notion クライアントの初期化
-notion = Client(auth=os.getenv("NOTION_TOKEN"))
-database_id = os.getenv("NOTION_DATABASE_ID")
+app = FastAPI()
 
 @app.get("/")
 def read_root():
     return {"message": "Hello, Notion-GPTs!"}
 
-@app.get("/notion-database")
-def get_database():
+@app.get("/notion-database/{database_id}")
+def get_database(database_id: str):
     try:
         response = notion.databases.query(database_id=database_id)
         return response
     except Exception as e:
-        return {"error": str(e)}
+        return JSONResponse(status_code=400, content={"error": str(e)})
